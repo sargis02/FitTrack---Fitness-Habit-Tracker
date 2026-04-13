@@ -57,7 +57,7 @@
             </p>
           </div>
         </section>
-        
+
         <section class="doc-section">
           <h3>Phase 2: Delete Functionality</h3>
           <div class="log-entry">
@@ -78,6 +78,33 @@
               <strong>Reflection:</strong> This was my first time thinking about
               security and not just functionality. It made me realise that even
               simple apps need to handle user input carefully.
+            </p>
+          </div>
+        </section>
+        <section class="doc-section">
+          <h3>Phase 3: localStorage Save/Load</h3>
+          <div class="log-entry">
+            <span class="log-date">Day 2</span>
+            <p>
+              <strong>Built:</strong> Switched from in-memory activities to
+              localStorage. Now activities stay even after refreshing the page.
+            </p>
+            <p>
+              <strong>Challenge:</strong> localStorage only saves strings and
+              Data could break if JSON parsing fails or storage is full.
+            </p>
+            <p>
+              <strong>Solution:</strong> I had to use JSON.stringify() and
+              JSON.parse(). I also added try/catch so the app won’t crash if
+              saved data is broken.
+            </p>
+            <p>
+              <strong>AI Use:</strong> I used AI assistance to better understand
+              how to safely handle errors with localStorage.
+            </p>
+            <p>
+              <strong>Reflection:</strong> This made the app feel more like a
+              real application instead of something that resets every refresh.
             </p>
           </div>
         </section>

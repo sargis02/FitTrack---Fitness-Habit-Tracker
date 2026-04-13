@@ -5,11 +5,17 @@
  * - it's a common CRUD feature
  * - it teaches me DOM events on dynamically generated elements
  *
- * Still IMPORTANT: data is in-memory only (refresh clears it).
+ * In Phase 1-2, I used an in-memory array for activities.
+ * In Phase 3, I switch to localStorage so the data persists
+ * even after page refresh.
+ * localStorage stores only strings, so we convert objects/arrays
+ * using JSON.stringify() and JSON.parse().
  */
 
-// In-memory storage for now
-let activities = [];
+const STORAGE_KEYS = {
+  // I keep keys here so I don't accidentally typo them later
+  ACTIVITIES: "fittrack_activities",
+};
 
 /**
  * Convert a Date object to YYYY-MM-DD.
@@ -46,17 +52,72 @@ function escapeHtml(text) {
 /**
  * Small feedback message under the form.
  * I keep it simple and auto-hide after a short time.
+ * I also support error styling (optional) because storage can fail.
  */
-function showSuccessMessage(message) {
+function showSuccessMessage(message, isError = false) {
   const el = document.getElementById("successMessage");
   if (!el) return;
 
   el.textContent = message;
   el.style.display = "block";
-
+  // Quick styling swap (I keep it simple at this phase)
+  if (isError) {
+    el.style.background = "#fee2e2";
+    el.style.color = "#991b1b";
+  } else {
+    el.style.background = "";
+    el.style.color = "";
+  }
   setTimeout(() => {
     el.style.display = "none";
   }, 2500);
+}
+
+/* ==========================================================
+   localStorage layer (this becomes the "source of truth")
+   ========================================================== */
+
+/**
+ * Load activities from localStorage.
+ * I wrap in try/catch because JSON.parse can throw if data is corrupted.
+ * I used AI assistance to validate the error-handling approach.
+ */
+function loadActivities() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEYS.ACTIVITIES);
+    return raw ? JSON.parse(raw) : [];
+  } catch (err) {
+    console.error("Error loading activities:", err);
+    return [];
+  }
+}
+
+function saveActivities(activities) {
+  try {
+    localStorage.setItem(STORAGE_KEYS.ACTIVITIES, JSON.stringify(activities));
+  } catch (err) {
+    console.error("Error saving activities:", err);
+    showSuccessMessage("Error saving data (storage may be full).", true);
+  }
+}
+
+/**
+ * Add activity into storage.
+ * I do: load then update then save.
+ */
+function addActivity(activity) {
+  const activities = loadActivities();
+  activities.push(activity);
+  saveActivities(activities);
+}
+
+/**
+ * Delete activity from storage by id.
+ */
+function deleteActivity(id) {
+  const activities = loadActivities();
+  const filtered = activities.filter((a) => a.id !== id);
+  saveActivities(filtered);
 }
 
 /* ---------- Form Validation (basic but clear) ---------- */
@@ -121,22 +182,15 @@ function renderCurrentDate() {
 }
 
 /**
- * Phase 2: delete activity by id (from in-memory array).
- * Later, when I add localStorage, this function will update storage too.
- */
-function deleteActivity(id) {
-  activities = activities.filter((a) => a.id !== id);
-}
-
-/**
- * Render activities list into the DOM.
- * I sort newest first so the latest activity is always on top.
+ * Render activities now from localStorage.
+ * This is the main change from Phase 2: we do not use a global array anymore.
  */
 function renderActivities() {
   const container = document.getElementById("activitiesList");
   const countEl = document.getElementById("activityCount");
   if (!container || !countEl) return;
 
+  const activities = loadActivities();
   countEl.textContent = `${activities.length} activit${
     activities.length === 1 ? "y" : "ies"
   }`;
@@ -151,6 +205,7 @@ function renderActivities() {
     return;
   }
 
+  // Sort newest first
   const sorted = [...activities].sort((a, b) => {
     if (b.date !== a.date) return b.date.localeCompare(a.date);
     return b.id - a.id;
@@ -209,7 +264,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const dateInput = document.getElementById("activityDate");
   if (dateInput) dateInput.value = toDateString(new Date());
 
-  // Submit form → add activity (still in-memory)
+  // add activity
   const form = document.getElementById("activityForm");
   if (form) {
     form.addEventListener("submit", (e) => {
@@ -228,16 +283,20 @@ document.addEventListener("DOMContentLoaded", () => {
       const notes = document.getElementById("activityNotes").value;
 
       // create a simple activity object
-      activities.push({
+      const activity = {
         id: Date.now(),
         type,
         name,
         duration,
         date,
         notes: (notes || "").trim(),
-      });
+        // I store createdAt now because it can be useful later (export feature)
+        createdAt: new Date().toISOString(),
+      };
 
       // reset form for next input
+      addActivity(activity);
+
       form.reset();
       if (dateInput) dateInput.value = toDateString(new Date());
 
@@ -247,7 +306,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   /**
-   * Event delegation (Phase 2)
+   * Delete activity
    * I listen on the parent container because cards/buttons are created with innerHTML.
    */
   const list = document.getElementById("activitiesList");
@@ -264,5 +323,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  // First render now loads activities from localStorage
   renderAll();
 });
