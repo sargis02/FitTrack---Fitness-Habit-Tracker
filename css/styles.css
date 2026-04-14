@@ -1,5 +1,5 @@
 /* ==========================================================
-   FitTrack - Phase 1 Styles
+   FitTrack (Phase 1)
    - I’m starting with a clean base UI: header + form + list
    - Later phases will add more styling (stats, filters, goals…)
 
@@ -8,6 +8,12 @@
    first. Phase 2 adds styles for:
    - Delete button on activity cards
    - Card header layout (title on left, actions on right)
+
+   FitTrack - Phase 4 Styles
+   Phase 4 adds:
+   - Edit button on activity cards
+   - Secondary button (Cancel)
+   - Card action button row feels more "app-like"
    ========================================================== */
 
 /* Design variables (easy to change colors in one place) */
@@ -25,6 +31,10 @@
   /* Phase 2: delete button colors */
   --color-danger: #ef4444;
   --color-danger-hover: #dc2626;
+
+  /* Phase 4: a neutral secondary button */
+  --color-secondary: #e2e8f0;
+  --color-secondary-hover: #cbd5e1;
 
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
   --shadow-md:
@@ -235,6 +245,14 @@ body {
 }
 
 /* Small buttons that sit inside cards */
+/* cancel button */
+.btn-secondary {
+  background: var(--color-secondary);
+  color: var(--color-text);
+}
+.btn-secondary:hover {
+  background: var(--color-secondary-hover);
+}
 .btn-icon {
   padding: 0.4rem 0.55rem;
   font-size: 0.85rem;
@@ -286,6 +304,12 @@ body {
 .activity-card-title {
   font-weight: 600;
   font-size: 0.95rem;
+}
+
+.activity-card-actions {
+  display: flex;
+  gap: 0.4rem;
+  flex-shrink: 0;
 }
 
 .activity-card-details {

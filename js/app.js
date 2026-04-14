@@ -10,6 +10,13 @@
  * even after page refresh.
  * localStorage stores only strings, so we convert objects/arrays
  * using JSON.stringify() and JSON.parse().
+ *
+ * In Phase 4 i add edit functionality.
+ * The flow I want:
+ * 1) Click edit on a card
+ * 2) Form fills with that activity's values
+ * 3) Submit updates the activity
+ * 4) Cancel exits edit mode
  */
 
 const STORAGE_KEYS = {
@@ -112,8 +119,22 @@ function addActivity(activity) {
 }
 
 /**
+ * update activity by id.
+ * replace only the changed fields, then save.
+ */
+function updateActivity(id, updatedData) {
+  const activities = loadActivities();
+  const index = activities.findIndex((a) => a.id === id);
+  if (index === -1) return;
+
+  activities[index] = { ...activities[index], ...updatedData };
+  saveActivities(activities);
+}
+
+/**
  * Delete activity from storage by id.
  */
+
 function deleteActivity(id) {
   const activities = loadActivities();
   const filtered = activities.filter((a) => a.id !== id);
@@ -165,6 +186,57 @@ function validateForm() {
   }
 
   return ok;
+}
+
+/**
+ * Reset form to default "Add" state.
+ * I keep this as a function so I can call it after submit and after cancel.
+ */
+function resetForm() {
+  const form = document.getElementById("activityForm");
+  if (!form) return;
+
+  form.reset();
+
+  // clear edit mode
+  document.getElementById("editId").value = "";
+
+  // update UI texts
+  document.getElementById("formTitle").textContent = "Add Activity";
+  document.getElementById("submitBtn").textContent = "Add Activity";
+  document.getElementById("cancelBtn").style.display = "none";
+
+  // set date back to today (nice UX)
+  document.getElementById("activityDate").value = toDateString(new Date());
+
+  clearErrors();
+}
+
+/**
+ * Fill form with an existing activity and switch UI to edit mode.
+ */
+function startEditActivity(id) {
+  const activities = loadActivities();
+  const activity = activities.find((a) => a.id === id);
+  if (!activity) return;
+
+  document.getElementById("editId").value = String(id);
+
+  document.getElementById("activityType").value = activity.type;
+  document.getElementById("activityName").value = activity.name;
+  document.getElementById("activityDuration").value = activity.duration;
+  document.getElementById("activityDate").value = activity.date;
+  document.getElementById("activityNotes").value = activity.notes || "";
+
+  document.getElementById("formTitle").textContent = "Edit Activity";
+  document.getElementById("submitBtn").textContent = "Update Activity";
+  document.getElementById("cancelBtn").style.display = "inline-flex";
+
+  // Scroll to form so user sees the edit fields immediately
+  document.getElementById("activityForm").scrollIntoView({
+    behavior: "smooth",
+    block: "start",
+  });
 }
 
 /* ---------- Rendering ---------- */
@@ -221,15 +293,20 @@ function renderActivities() {
             <span style="color:#64748b; font-weight:600;">(${a.type})</span>
           </div>
 
-          <!-- Phase 2: delete button -->
-          <button
-            class="btn btn-danger btn-icon delete-btn"
-            data-id="${a.id}"
-            title="Delete"
-            type="button"
-          >
-            &#10005;
-          </button>
+          <!-- Phase 4: edit + delete button -->
+          <div class="activity-card-actions">
+            <button class="btn btn-secondary btn-icon edit-btn" data-id="${a.id}" title="Edit" type="button">
+              &#9998;
+            </button>
+            <button
+              class="btn btn-danger btn-icon delete-btn"
+              data-id="${a.id}"
+              title="Delete"
+              type="button"
+            >
+              &#10005;
+            </button>
+          </div>
         </div>
 
         <div class="activity-card-details">
@@ -273,6 +350,9 @@ document.addEventListener("DOMContentLoaded", () => {
       if (!validateForm()) return;
 
       // read values from form
+
+      const editId = document.getElementById("editId").value;
+
       const type = document.getElementById("activityType").value;
       const name = document.getElementById("activityName").value.trim();
       const duration = parseInt(
@@ -282,44 +362,71 @@ document.addEventListener("DOMContentLoaded", () => {
       const date = document.getElementById("activityDate").value;
       const notes = document.getElementById("activityNotes").value;
 
-      // create a simple activity object
-      const activity = {
-        id: Date.now(),
-        type,
-        name,
-        duration,
-        date,
-        notes: (notes || "").trim(),
-        // I store createdAt now because it can be useful later (export feature)
-        createdAt: new Date().toISOString(),
-      };
-
-      // reset form for next input
-      addActivity(activity);
-
-      form.reset();
-      if (dateInput) dateInput.value = toDateString(new Date());
-
-      showSuccessMessage("Activity added!");
+      if (editId) {
+        // Update existing activity
+        updateActivity(parseInt(editId, 10), {
+          type,
+          name,
+          duration,
+          date,
+          notes: (notes || "").trim(),
+        });
+        showSuccessMessage("Activity updated!");
+      } else {
+        // create a simple activity object
+        addActivity({
+          id: Date.now(),
+          type,
+          name,
+          duration,
+          date,
+          notes: (notes || "").trim(),
+          // I store createdAt now because it can be useful later (export feature)
+          createdAt: new Date().toISOString(),
+        });
+        showSuccessMessage("Activity added!");
+      }
+      resetForm();
       renderActivities();
     });
   }
 
-  /**
-   * Delete activity
-   * I listen on the parent container because cards/buttons are created with innerHTML.
+  // Cancel button leaves edit mode
+  const cancelBtn = document.getElementById("cancelBtn");
+  if (cancelBtn) {
+    cancelBtn.addEventListener("click", () => {
+      resetForm();
+      showSuccessMessage("Edit cancelled");
+    });
+  }
+
+  /*
+   * Event delegation for Edit/Delete buttons.
+   * This keeps code simpler because cards are generated dynamically.
    */
   const list = document.getElementById("activitiesList");
   if (list) {
     list.addEventListener("click", (e) => {
+      const editBtn = e.target.closest(".edit-btn");
       const deleteBtn = e.target.closest(".delete-btn");
-      if (!deleteBtn) return;
 
-      const id = parseInt(deleteBtn.dataset.id, 10);
-      deleteActivity(id);
+      if (editBtn) {
+        const id = parseInt(editBtn.dataset.id, 10);
+        startEditActivity(id);
+      }
 
-      showSuccessMessage("Activity deleted");
-      renderActivities();
+      if (deleteBtn) {
+        const id = parseInt(deleteBtn.dataset.id, 10);
+        deleteActivity(id);
+        showSuccessMessage("Activity deleted");
+        renderActivities();
+
+        // If user deletes the thing they're editing, reset form to avoid confusion
+        const editId = document.getElementById("editId").value;
+        if (editId && parseInt(editId, 10) === id) {
+          resetForm();
+        }
+      }
     });
   }
 
