@@ -17,6 +17,13 @@
  * 2) Form fills with that activity's values
  * 3) Submit updates the activity
  * 4) Cancel exits edit mode
+ *
+ * In Phase 5 i add stats bar.
+ * I want to show basic statistics:
+ * 1) Total activities
+ * 2) Activities this week
+ * 3) Activities this month
+ * 4) Average duration
  */
 
 const STORAGE_KEYS = {
@@ -188,9 +195,77 @@ function validateForm() {
   return ok;
 }
 
+/* ---------- Date range helpers (stats depend on these) ---------- */
+
+/**
+ * Start of current week (Monday at 00:00).
+ * This part is tricky because JS getDay() returns:
+ * Sun=0, Mon=1, ... Sat=6.
+ *
+ * So for Monday-based week:
+ * - if today is Sunday (0), we go back 6 days
+ * - else go back (day - 1)
+ * I used AI and online references to
+ * confirm the logic and edge cases.
+ */
+function getStartOfWeek() {
+  const now = new Date();
+  const day = now.getDay();
+  const diff = now.getDate() - day + (day === 0 ? -6 : 1);
+
+  const start = new Date(now);
+  start.setDate(diff);
+  start.setHours(0, 0, 0, 0);
+  return start;
+}
+
+function getStartOfMonth() {
+  const now = new Date();
+  return new Date(now.getFullYear(), now.getMonth(), 1);
+}
+
+/* ---------- Statistics calculation ---------- */
+
+/**
+ * Calculates stats based on activities in localStorage.
+ * Returns an object that can be used by renderStatsBar().
+ */
+function calculateStats() {
+  const activities = loadActivities();
+
+  const weekStart = getStartOfWeek();
+  const monthStart = getStartOfMonth();
+
+  const weekActivities = activities.filter((a) => {
+    const d = new Date(a.date + "T00:00:00");
+    return d >= weekStart;
+  });
+
+  const monthActivities = activities.filter((a) => {
+    const d = new Date(a.date + "T00:00:00");
+    return d >= monthStart;
+  });
+
+  const totalDuration = activities.reduce(
+    (sum, a) => sum + (a.duration || 0),
+    0,
+  );
+  const avgDuration =
+    activities.length > 0 ? Math.round(totalDuration / activities.length) : 0;
+
+  return {
+    total: activities.length,
+    weekly: weekActivities.length,
+    monthly: monthActivities.length,
+    avgDuration,
+  };
+}
+
 /**
  * Reset form to default "Add" state.
  * I keep this as a function so I can call it after submit and after cancel.
+ * Ai assistance helped me ensure I reset all relevant fields and
+ * UI texts to avoid confusion when switching between add/edit modes.
  */
 function resetForm() {
   const form = document.getElementById("activityForm");
@@ -251,6 +326,16 @@ function renderCurrentDate() {
     month: "long",
     day: "numeric",
   });
+}
+
+function renderStatsBar() {
+  // now stast are visible and updated on every render, based on current localStorage data
+  const stats = calculateStats();
+
+  document.getElementById("statTotal").textContent = stats.total;
+  document.getElementById("statWeekly").textContent = stats.weekly;
+  document.getElementById("statMonthly").textContent = stats.monthly;
+  document.getElementById("statAvgDuration").textContent = stats.avgDuration;
 }
 
 /**
@@ -331,6 +416,7 @@ function renderActivities() {
 
 function renderAll() {
   renderCurrentDate();
+  renderStatsBar();
   renderActivities();
 }
 
@@ -387,7 +473,7 @@ document.addEventListener("DOMContentLoaded", () => {
         showSuccessMessage("Activity added!");
       }
       resetForm();
-      renderActivities();
+      renderAll();
     });
   }
 
@@ -426,6 +512,8 @@ document.addEventListener("DOMContentLoaded", () => {
         if (editId && parseInt(editId, 10) === id) {
           resetForm();
         }
+
+        renderAll();
       }
     });
   }

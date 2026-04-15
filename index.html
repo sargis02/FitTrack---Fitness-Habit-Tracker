@@ -36,9 +36,43 @@
         </nav>
       </div>
     </header>
-
+    <!-- Layout: left = create + motivation, right = discover + manage -->
     <main class="main-content">
-      <!-- Layout: left = create + motivation, right = discover + manage -->
+      <!-- quick stats bar -->
+      <section class="stats-bar" id="statsBar">
+        <div class="stats-item">
+          <span class="stats-icon">&#9989;</span>
+          <div class="stats-info">
+            <span class="stats-number" id="statTotal">0</span>
+            <span class="stats-label">Total</span>
+          </div>
+        </div>
+
+        <div class="stats-item">
+          <span class="stats-icon">&#128197;</span>
+          <div class="stats-info">
+            <span class="stats-number" id="statWeekly">0</span>
+            <span class="stats-label">This Week</span>
+          </div>
+        </div>
+
+        <div class="stats-item">
+          <span class="stats-icon">&#128200;</span>
+          <div class="stats-info">
+            <span class="stats-number" id="statMonthly">0</span>
+            <span class="stats-label">This Month</span>
+          </div>
+        </div>
+
+        <div class="stats-item">
+          <span class="stats-icon">&#9201;</span>
+          <div class="stats-info">
+            <span class="stats-number" id="statAvgDuration">0</span>
+            <span class="stats-label">Avg Duration</span>
+          </div>
+        </div>
+      </section>
+
       <div class="content-grid">
         <div class="left-column">
           <section class="card form-card">

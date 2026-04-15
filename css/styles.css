@@ -14,6 +14,10 @@
    - Edit button on activity cards
    - Secondary button (Cancel)
    - Card action button row feels more "app-like"
+
+   FitTrack - Phase 5 Styles
+   Phase 5 adds:
+   - A quick stats bar (Total/Week/Month/Avg Duration)
    ========================================================== */
 
 /* Design variables (easy to change colors in one place) */
@@ -142,6 +146,50 @@ body {
   padding: 1.25rem;
   width: 100%;
   flex: 1; /* pushes footer down */
+}
+
+/* Phase 5: stats bar */
+.stats-bar {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+
+.stats-item {
+  background: var(--color-card);
+  border-radius: var(--radius);
+  padding: 1rem 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--color-border);
+}
+
+.stats-icon {
+  font-size: 1.75rem;
+  line-height: 1;
+}
+
+.stats-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.stats-number {
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--color-text);
+}
+
+.stats-label {
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 
 /* Mobile-first: stack columns */
@@ -389,6 +437,13 @@ body {
 }
 
 /* Desktop: switch into two columns */
+@media (min-width: 640px) {
+  /* Stats bar becomes 4 columns on tablet+ */
+  .stats-bar {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
 @media (min-width: 900px) {
   .content-grid {
     flex-direction: row;
