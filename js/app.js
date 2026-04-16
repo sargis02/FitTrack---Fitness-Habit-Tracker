@@ -24,6 +24,8 @@
  * 2) Activities this week
  * 3) Activities this month
  * 4) Average duration
+ *
+ * In Phase 6 I add filter and search
  */
 
 const STORAGE_KEYS = {
@@ -314,6 +316,58 @@ function startEditActivity(id) {
   });
 }
 
+// Filtering + Search
+
+/**
+ * It read UI controls and return a filtered/sorted list.
+ * I keep this as a separate function because:
+ * - It's easier to debug
+ * - It's easier to extend later (like adding more filters)
+ */
+function getFilteredActivities() {
+  let activities = loadActivities();
+
+  const filterType = document.getElementById("filterType").value;
+  const filterDate = document.getElementById("filterDate").value;
+  const searchText = document
+    .getElementById("searchInput")
+    .value.toLowerCase()
+    .trim();
+
+  // Filter 1: type
+  if (filterType !== "all") {
+    activities = activities.filter((a) => a.type === filterType);
+  }
+
+  // Filter 2: period
+  if (filterDate === "week") {
+    const weekStart = getStartOfWeek();
+    activities = activities.filter(
+      (a) => new Date(a.date + "T00:00:00") >= weekStart,
+    );
+  } else if (filterDate === "month") {
+    const monthStart = getStartOfMonth();
+    activities = activities.filter(
+      (a) => new Date(a.date + "T00:00:00") >= monthStart,
+    );
+  }
+
+  // Filter 3: search by name
+  if (searchText) {
+    activities = activities.filter((a) =>
+      (a.name || "").toLowerCase().includes(searchText),
+    );
+  }
+
+  // Sorting: newest first
+  activities.sort((a, b) => {
+    if (b.date !== a.date) return b.date.localeCompare(a.date);
+    return b.id - a.id;
+  });
+
+  return activities;
+}
+
 /* ---------- Rendering ---------- */
 
 function renderCurrentDate() {
@@ -347,7 +401,7 @@ function renderActivities() {
   const countEl = document.getElementById("activityCount");
   if (!container || !countEl) return;
 
-  const activities = loadActivities();
+  const activities = getFilteredActivities();
   countEl.textContent = `${activities.length} activit${
     activities.length === 1 ? "y" : "ies"
   }`;
@@ -356,19 +410,13 @@ function renderActivities() {
     container.innerHTML = `
       <div class="empty-state">
         <span class="empty-icon">&#128203;</span>
-        <p>No activities yet. Add your first activity!</p>
+        <p>No activities found. Try changing filters or search!</p>
       </div>
     `;
     return;
   }
 
-  // Sort newest first
-  const sorted = [...activities].sort((a, b) => {
-    if (b.date !== a.date) return b.date.localeCompare(a.date);
-    return b.id - a.id;
-  });
-
-  container.innerHTML = sorted
+  container.innerHTML = activities
     .map(
       (a) => `
       <div class="activity-card" data-id="${a.id}">
@@ -378,7 +426,7 @@ function renderActivities() {
             <span style="color:#64748b; font-weight:600;">(${a.type})</span>
           </div>
 
-          <!-- Phase 4: edit + delete button -->
+          <!-- edit + delete button -->
           <div class="activity-card-actions">
             <button class="btn btn-secondary btn-icon edit-btn" data-id="${a.id}" title="Edit" type="button">
               &#9998;
@@ -485,6 +533,15 @@ document.addEventListener("DOMContentLoaded", () => {
       showSuccessMessage("Edit cancelled");
     });
   }
+
+    //when filters change, just re-render list
+  const filterType = document.getElementById("filterType");
+  const filterDate = document.getElementById("filterDate");
+  const searchInput = document.getElementById("searchInput");
+
+  if (filterType) filterType.addEventListener("change", renderActivities);
+  if (filterDate) filterDate.addEventListener("change", renderActivities);
+  if (searchInput) searchInput.addEventListener("input", renderActivities);
 
   /*
    * Event delegation for Edit/Delete buttons.

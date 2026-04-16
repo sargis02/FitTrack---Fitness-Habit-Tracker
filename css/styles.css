@@ -18,6 +18,10 @@
    FitTrack - Phase 5 Styles
    Phase 5 adds:
    - A quick stats bar (Total/Week/Month/Avg Duration)
+
+   FitTrack - Phase 6 Styles
+   Phase 6 adds:
+   - Filter/Search card styling (select inputs + search box)
    ========================================================== */
 
 /* Design variables (easy to change colors in one place) */
@@ -313,6 +317,46 @@ body {
 }
 .form-actions .btn {
   flex: 1;
+}
+
+/* Phase 6: Filter/Search card */
+.filter-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+}
+
+/* Each filter group is a mini block: label + input */
+.filter-group {
+  flex: 1;
+  min-width: 120px;
+}
+
+.filter-group label {
+  display: block;
+  font-size: 0.78rem;
+  font-weight: 600;
+  margin-bottom: 0.3rem;
+  color: var(--color-text-secondary);
+}
+
+/* Inputs inside filter area: slightly smaller padding */
+.filter-group select,
+.filter-group input {
+  width: 100%;
+  padding: 0.5rem 0.7rem;
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-family);
+  font-size: 0.85rem;
+  color: var(--color-text);
+  background: var(--color-card);
+}
+
+/* Search takes more width */
+.filter-search {
+  flex: 2;
+  min-width: 180px;
 }
 
 /* Activities list */

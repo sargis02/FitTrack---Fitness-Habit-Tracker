@@ -163,6 +163,39 @@
 
         <!-- Right column: list -->
         <div class="right-column">
+          <!-- Filter -->
+          <section class="card filter-card">
+            <h2 class="card-title">Filter & Search</h2>
+            <div class="filter-controls">
+              <div class="filter-group">
+                <label for="filterType">Type</label>
+                <select id="filterType">
+                  <option value="all">All Types</option>
+                  <option value="workout">Workouts</option>
+                  <option value="habit">Habits</option>
+                </select>
+              </div>
+
+              <div class="filter-group">
+                <label for="filterDate">Period</label>
+                <select id="filterDate">
+                  <option value="all">All Time</option>
+                  <option value="week">This Week</option>
+                  <option value="month">This Month</option>
+                </select>
+              </div>
+
+              <!-- search -->
+              <div class="filter-group filter-search">
+                <label for="searchInput">Search</label>
+                <input
+                  type="search"
+                  id="searchInput"
+                  placeholder="Search activities..."
+                />
+              </div>
+            </div>
+          </section>
           <section class="card activities-card">
             <div class="activities-header">
               <h2 class="card-title">Activities</h2>
