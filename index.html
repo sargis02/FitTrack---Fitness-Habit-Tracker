@@ -199,6 +199,44 @@
             <!-- JS renders goal items here -->
             <div class="goals-list" id="goalsList"></div>
           </section>
+
+          <!-- Statistics Dashboard -->
+          <section class="card stats-dashboard-card">
+            <h2 class="card-title">Statistics Dashboard</h2>
+
+            <div class="stats-grid">
+              <div class="stat-box">
+                <span class="stat-value" id="dashTotal">0</span>
+                <span class="stat-label">Total Activities</span>
+              </div>
+              <div class="stat-box">
+                <span class="stat-value" id="dashWeekly">0</span>
+                <span class="stat-label">Weekly Total</span>
+              </div>
+              <div class="stat-box">
+                <span class="stat-value" id="dashMonthly">0</span>
+                <span class="stat-label">Monthly Total</span>
+              </div>
+              <div class="stat-box">
+                <span class="stat-value" id="dashAvgDuration">0</span>
+                <span class="stat-label">Avg Duration</span>
+              </div>
+              <div class="stat-box">
+                <span class="stat-value" id="dashWorkouts">0</span>
+                <span class="stat-label">Workouts</span>
+              </div>
+              <div class="stat-box">
+                <span class="stat-value" id="dashHabits">0</span>
+                <span class="stat-label">Habits</span>
+              </div>
+            </div>
+          </section>
+
+          <!-- Weekly chart -->
+          <section class="card chart-card">
+            <h2 class="card-title">Last 7 Days Activity</h2>
+            <div class="bar-chart" id="weeklyChart"></div>
+          </section>
         </div>
 
         <!-- Right column: list -->

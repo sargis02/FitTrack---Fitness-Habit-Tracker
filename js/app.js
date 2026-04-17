@@ -28,6 +28,10 @@
  * In Phase 6 I add filter and search
  *
  * In Phaase 7 I add streak counts and goals.
+ *
+ * In Phase 8 I added:
+ * - weekly bar chart
+ * - Statistics Dashboard
  */
 
 const STORAGE_KEYS = {
@@ -248,6 +252,8 @@ function validateForm() {
  * - else go back (day - 1)
  * I used AI and online references to
  * confirm the logic and edge cases.
+ * 
+ * I used AI to confirm the logic and edge cases, especially around Sunday and month boundaries.
  */
 function getStartOfWeek() {
   const now = new Date();
@@ -294,14 +300,24 @@ function calculateStats() {
   const avgDuration =
     activities.length > 0 ? Math.round(totalDuration / activities.length) : 0;
 
+  const workouts = activities.filter((a) => a.type === "workout").length;
+  const habits = activities.filter((a) => a.type === "habit").length;
+
   return {
     total: activities.length,
     weekly: weekActivities.length,
     monthly: monthActivities.length,
     avgDuration,
+    workouts,
+    habits,
   };
 }
 
+
+/* I used AI to help me design the streak logic, which can be tricky with edge 
+cases around today/yesterday and gaps in activity. The main rule is that the 
+streak counts consecutive days with at least one activity, and it must include 
+either today or yesterday to be considered active. */
 /* Streak */
 function calculateStreak() {
   const activities = loadActivities();
@@ -395,6 +411,10 @@ function startEditActivity(id) {
  * I keep this as a separate function because:
  * - It's easier to debug
  * - It's easier to extend later (like adding more filters)
+ * 
+ * I used AI to help me design the filtering logic and ensure it works correctly 
+ * together (type + date + search) without conflicts. I also made sure the sorting 
+ * by date and id works as expected, especially when multiple activities have the same date.
  */
 function getFilteredActivities() {
   let activities = loadActivities();
@@ -464,6 +484,18 @@ function renderStatsBar() {
   document.getElementById("statWeekly").textContent = stats.weekly;
   document.getElementById("statMonthly").textContent = stats.monthly;
   document.getElementById("statAvgDuration").textContent = stats.avgDuration;
+}
+
+//  Dashboard grid values
+function renderStatsDashboard() {
+  const stats = calculateStats();
+
+  document.getElementById("dashTotal").textContent = stats.total;
+  document.getElementById("dashWeekly").textContent = stats.weekly;
+  document.getElementById("dashMonthly").textContent = stats.monthly;
+  document.getElementById("dashAvgDuration").textContent = stats.avgDuration;
+  document.getElementById("dashWorkouts").textContent = stats.workouts;
+  document.getElementById("dashHabits").textContent = stats.habits;
 }
 
 /**
@@ -583,11 +615,61 @@ function renderGoals() {
     .join("");
 }
 
+// Weekly chart
+function renderWeeklyChart() {
+  const container = document.getElementById("weeklyChart");
+  if (!container) return;
+
+  const activities = loadActivities();
+  const dayLabels = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+  // Build 7 day buckets (6 days ago ... today)
+  const days = [];
+  for (let i = 6; i >= 0; i--) {
+    const date = new Date();
+    date.setDate(date.getDate() - i);
+
+    const dateStr = toDateString(date);
+    const dayActivities = activities.filter((a) => a.date === dateStr);
+
+    days.push({
+      label: dayLabels[date.getDay()],
+      count: dayActivities.length,
+      hasWorkout: dayActivities.some((a) => a.type === "workout"),
+      hasHabit: dayActivities.some((a) => a.type === "habit"),
+    });
+  }
+
+  // Used to scale heights
+  const maxCount = Math.max(...days.map((d) => d.count), 1);
+
+  container.innerHTML = days
+    .map((d) => {
+      const heightPercent = (d.count / maxCount) * 100;
+
+      // Color logic: workout-only, habit-only, or mixed
+      let barClass = "mixed-bar";
+      if (d.hasWorkout && !d.hasHabit) barClass = "workout-bar";
+      else if (d.hasHabit && !d.hasWorkout) barClass = "habit-bar";
+
+      return `
+        <div class="bar-column">
+          <span class="bar-value">${d.count > 0 ? d.count : ""}</span>
+          <div class="bar ${barClass}" style="height: ${d.count > 0 ? heightPercent : 0}%"></div>
+          <span class="bar-label">${d.label}</span>
+        </div>
+      `;
+    })
+    .join("");
+}
+
 function renderAll() {
   renderCurrentDate();
   renderStatsBar();
   renderActivities();
   renderGoals();
+  renderWeeklyChart();
+  renderStatsDashboard();
 }
 
 /* ---------- App Start ---------- */
